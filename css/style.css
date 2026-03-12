@@ -420,6 +420,27 @@ nav {
   margin-top: 0.5rem;
 }
 
+/* ── CARD HOVER PREVIEW ── */
+#card-preview {
+  position: fixed;
+  width: 260px;
+  z-index: 150;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  filter: drop-shadow(0 16px 48px rgba(0,0,0,0.85)) drop-shadow(0 0 20px rgba(201,168,76,0.15));
+}
+#card-preview.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+#card-preview img {
+  width: 100%;
+  border-radius: 4.75% / 3.5%;
+  display: block;
+}
+
 /* ── MODAL ── */
 .modal-overlay {
   display: none;

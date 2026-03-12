@@ -155,6 +155,36 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 // ── CARD VIEWER ──
 const cardCache = {};
 
+// ── CARD HOVER PREVIEW ──
+const cardPreview = document.getElementById('card-preview');
+const cardPreviewImg = cardPreview.querySelector('img');
+
+function showCardPreview(imgSrc, name, anchorEl) {
+  cardPreviewImg.src = imgSrc;
+  cardPreviewImg.alt = name;
+
+  const rect = anchorEl.getBoundingClientRect();
+  const previewWidth = 260;
+  const previewHeight = 362; // approx card height at 260px wide
+
+  let left = rect.left + rect.width / 2 - previewWidth / 2;
+  let top = rect.top - previewHeight - 16;
+
+  // Not enough space above → show below
+  if (top < 8) top = rect.bottom + 12;
+
+  // Clamp horizontally within viewport
+  left = Math.max(8, Math.min(left, window.innerWidth - previewWidth - 8));
+
+  cardPreview.style.left = left + 'px';
+  cardPreview.style.top  = top  + 'px';
+  cardPreview.classList.add('visible');
+}
+
+function hideCardPreview() {
+  cardPreview.classList.remove('visible');
+}
+
 async function fetchCard(name) {
   if (cardCache[name]) return cardCache[name];
   try {
@@ -183,7 +213,9 @@ function createCardEl(card, badge = null) {
     <img src="${img}" alt="${card.name}" loading="lazy">
     <div class="card-label">${card.name}</div>
   `;
-  div.addEventListener('click', () => openCardModal(card));
+  div.addEventListener('mouseenter', () => showCardPreview(img, card.name, div));
+  div.addEventListener('mouseleave', hideCardPreview);
+  div.addEventListener('click', () => { hideCardPreview(); openCardModal(card); });
   return div;
 }
 
