@@ -423,7 +423,6 @@ nav {
 /* ── CARD HOVER PREVIEW ── */
 #card-preview {
   position: fixed;
-  width: 260px;
   z-index: 150;
   pointer-events: none;
   opacity: 0;
@@ -435,10 +434,20 @@ nav {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
-#card-preview img {
-  width: 100%;
+.card-preview-faces {
+  display: flex;
+  gap: 8px;
+}
+.card-preview-faces img {
+  width: 185px;
   border-radius: 4.75% / 3.5%;
   display: block;
+}
+#card-preview.single .card-preview-faces img {
+  width: 260px;
+}
+#card-preview.single .card-face-2 {
+  display: none;
 }
 
 /* ── MODAL ── */
