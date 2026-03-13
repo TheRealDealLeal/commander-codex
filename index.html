@@ -69,21 +69,45 @@
       vertical-align: middle;
     }
     .deck-table tr:last-child td { border-bottom: none; }
-    .deck-table tr:hover td { background: var(--gold-glow); }
+    .deck-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+    .deck-table tr:hover td { background: var(--gold-glow) !important; transition: background 0.15s; }
     .deck-table th[data-col] {
       cursor: pointer;
       user-select: none;
       white-space: nowrap;
+      transition: color 0.2s, background 0.2s;
     }
-    .deck-table th[data-col]:hover { color: var(--gold); }
+    .deck-table th[data-col]:hover { color: var(--gold); background: rgba(201,168,76,0.06); }
     .deck-table th[data-col]::after {
-      content: ' ⇅';
-      opacity: 0.3;
-      font-size: 0.7em;
+      content: ' ↕';
+      opacity: 0.25;
+      font-size: 0.75em;
+      margin-left: 2px;
     }
     .deck-table th.sort-asc::after  { content: ' ▲'; opacity: 1; color: var(--gold); }
     .deck-table th.sort-desc::after { content: ' ▼'; opacity: 1; color: var(--gold); }
-    .deck-table th.sort-active { color: var(--gold); }
+    .deck-table th.sort-active { color: var(--gold); background: rgba(201,168,76,0.05); }
+
+    .deck-search-bar {
+      margin-bottom: 1rem;
+    }
+    .deck-search-bar input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-color: transparent;
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 1rem;
+      padding: 0.65rem 1.25rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .deck-search-bar input:focus {
+      border-color: var(--gold-dim);
+      background: var(--surface2);
+    }
+    .deck-search-bar input::placeholder { color: var(--text-faint); font-style: italic; }
 
     .modal-deck-stats {
       margin-top: 1.5rem;
@@ -111,22 +135,41 @@
     .player-stat-card {
       background: var(--surface);
       padding: 1.5rem;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
     }
-    .player-stat-card:hover { background: var(--surface2); }
+    .player-stat-card:hover {
+      background: var(--surface2);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
     .player-stat-name {
       font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: var(--gold);
       margin-bottom: 0.75rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
     }
     .player-stat-line {
       font-size: 0.82rem;
       color: var(--text-dim);
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.25rem;
     }
     .player-stat-line strong { color: var(--text); }
+    .player-wr-bar {
+      margin-top: 0.85rem;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .player-wr-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold-light));
+      border-radius: 2px;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
   </style>
 </head>
 <body>
@@ -208,7 +251,7 @@
     <div class="section-title">Player Breakdown</div>
     <div class="player-stat-grid" id="player-breakdown-grid"></div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
       <div class="section-title" style="margin-bottom:0;">All 44 Decks</div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
         <button class="filter-btn active" data-filter="all">All</button>
@@ -216,20 +259,25 @@
         <button class="filter-btn" data-filter="Joe">Joe</button>
         <button class="filter-btn" data-filter="Mike">Mike</button>
         <button class="filter-btn" data-filter="Sean">Sean</button>
+        <button class="filter-btn" data-filter="Will">Will</button>
       </div>
+    </div>
+
+    <div class="deck-search-bar">
+      <input type="text" id="deck-search" placeholder="Search by commander or player…" autocomplete="off">
     </div>
 
     <table class="deck-table">
       <thead>
         <tr id="deck-thead-row">
-          <th data-col="owner">Owner</th>
-          <th data-col="name">Commander / Deck</th>
-          <th data-col="games">Games</th>
-          <th data-col="wins" class="sort-active sort-desc">Wins</th>
-          <th data-col="second">2nd</th>
-          <th data-col="third">3rd</th>
-          <th data-col="winRate">Win %</th>
-          <th data-col="t1SolRing">T1 Sol ⚡</th>
+          <th data-col="owner"      onclick="setSort('owner')">Owner</th>
+          <th data-col="name"       onclick="setSort('name')">Commander / Deck</th>
+          <th data-col="games"      onclick="setSort('games')">Games</th>
+          <th data-col="wins"       onclick="setSort('wins')" class="sort-active sort-desc">Wins</th>
+          <th data-col="second"     onclick="setSort('second')">2nd</th>
+          <th data-col="third"      onclick="setSort('third')">3rd</th>
+          <th data-col="winRate"    onclick="setSort('winRate')">Win %</th>
+          <th data-col="t1SolRing"  onclick="setSort('t1SolRing')">T1 Sol ⚡</th>
         </tr>
       </thead>
       <tbody id="deck-body"></tbody>

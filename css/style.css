@@ -38,7 +38,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Starfield / noise background */
+/* Atmospheric background gradients */
 body::before {
   content: '';
   position: fixed;
@@ -49,6 +49,18 @@ body::before {
     radial-gradient(ellipse at 50% 80%, rgba(201, 168, 76, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
 }
 
 /* ── NAV ── */
@@ -126,7 +138,20 @@ nav {
   position: relative;
   z-index: 1;
 }
-.page.active { display: block; }
+.page.active {
+  display: block;
+  animation: pageEnter 0.3s ease both;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 
 /* ── HERO ── */
 .hero {
@@ -223,9 +248,24 @@ nav {
   background: var(--surface);
   padding: 2rem 1.5rem;
   text-align: center;
-  transition: background 0.3s;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+  position: relative;
+  overflow: hidden;
 }
-.stat-card:hover { background: var(--surface2); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.stat-card:hover {
+  background: var(--surface2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.2);
+}
+.stat-card:hover::before { opacity: 1; }
 
 .stat-number {
   font-family: 'Cinzel Decorative', serif;
@@ -281,7 +321,12 @@ nav {
   text-align: center;
 }
 
-.lb-row.rank-1 .lb-rank { color: var(--gold); font-size: 1.3rem; text-shadow: 0 0 10px rgba(201,168,76,0.5); }
+.lb-row.rank-1 {
+  background: linear-gradient(90deg, rgba(201,168,76,0.06), transparent 60%) !important;
+  border-left: 2px solid var(--gold-dim);
+}
+.lb-row.rank-1 .lb-rank { color: var(--gold); font-size: 1.3rem; text-shadow: 0 0 16px rgba(201,168,76,0.7); }
+.lb-row.rank-1 .lb-player { color: var(--gold-light); }
 .lb-row.rank-2 .lb-rank { color: #b0b8c8; }
 .lb-row.rank-3 .lb-rank { color: #c97a4a; }
 

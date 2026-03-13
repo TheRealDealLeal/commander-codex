@@ -85,17 +85,37 @@ const charityYears = [
 
 // ── GLOBAL STATS ──
 const TOTAL_GAMES  = 37;
-const TOTAL_KILLS  = players.reduce((s,p) => s+p.kills, 0);       // 111
-const TOTAL_T1     = players.reduce((s,p) => s+p.t1SolRing, 0);   // 13
-const TOTAL_DECKS  = allDecks.filter(d => d.games > 0).length;    // 44
-const TOP_WINRATE  = Math.max(...players.map(p => p.winRate));     // 40.91
+const TOTAL_KILLS  = players.reduce((s,p) => s+p.kills, 0);
+const TOTAL_T1     = players.reduce((s,p) => s+p.t1SolRing, 0);
+const TOTAL_DECKS  = allDecks.filter(d => d.games > 0).length;
+const TOP_WINRATE  = Math.max(...players.map(p => p.winRate));
 
-document.getElementById('stat-games').textContent   = TOTAL_GAMES;
-document.getElementById('stat-players').textContent = players.length;
-document.getElementById('stat-kills').textContent   = TOTAL_KILLS;
-document.getElementById('stat-t1').textContent      = TOTAL_T1;
-document.getElementById('stat-decks').textContent   = TOTAL_DECKS;
-document.getElementById('stat-rate').textContent    = TOP_WINRATE.toFixed(0) + '%';
+function animateCounter(el, target, suffix = '', decimals = 0) {
+  const duration = 1400;
+  const start = performance.now();
+  const tick = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = (eased * target).toFixed(decimals) + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// Trigger counters when the stat cards scroll into view
+const statObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    statObserver.unobserve(e.target);
+    animateCounter(document.getElementById('stat-games'),   TOTAL_GAMES);
+    animateCounter(document.getElementById('stat-players'), players.length);
+    animateCounter(document.getElementById('stat-kills'),   TOTAL_KILLS);
+    animateCounter(document.getElementById('stat-t1'),      TOTAL_T1);
+    animateCounter(document.getElementById('stat-decks'),   TOTAL_DECKS);
+    animateCounter(document.getElementById('stat-rate'),    TOP_WINRATE, '%', 0);
+  });
+}, { threshold: 0.3 });
+statObserver.observe(document.querySelector('.stat-grid'));
 
 // ── LEADERBOARD ──
 function renderLeaderboard() {
@@ -108,7 +128,7 @@ function renderLeaderboard() {
       ? `${bestDeck.name} <span style="color:var(--gold-dim);font-size:0.8rem;">(${bestDeck.winRate.toFixed(0)}% WR)</span>`
       : allDecks.filter(d => d.owner === p.name && d.wins > 0).sort((a,b) => b.wins - a.wins)[0]?.name ?? '—';
     return `
-      <div class="lb-row rank-${i+1}">
+      <div class="lb-row rank-${i+1}" style="animation:rowIn 0.35s ease both;animation-delay:${i * 80}ms">
         <div class="lb-rank">${medals[i]||i+1}</div>
         <div>
           <div class="lb-player">${p.name}</div>
@@ -126,29 +146,46 @@ function renderLeaderboard() {
 // ── DECK TABLE ──
 const deckSort = { col: 'wins', dir: 'desc' };
 let deckFilter = 'all';
+let deckSearch  = '';
+
+// Called directly from onclick on <th> elements — avoids all event delegation timing issues
+function setSort(col) {
+  if (deckSort.col === col) {
+    deckSort.dir = deckSort.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    deckSort.col = col;
+    deckSort.dir = (col === 'name' || col === 'owner') ? 'asc' : 'desc';
+  }
+  renderDeckTable();
+}
 
 function sortDecks(decks) {
   const { col, dir } = deckSort;
   return [...decks].sort((a, b) => {
-    let av = a[col], bv = b[col];
-    // String columns sort alphabetically
+    const av = a[col], bv = b[col];
     if (typeof av === 'string') {
       const cmp = av.localeCompare(bv);
       return dir === 'asc' ? cmp : -cmp;
     }
-    // Numeric: primary sort on chosen col, secondary alpha by name
     const cmp = dir === 'asc' ? av - bv : bv - av;
     return cmp !== 0 ? cmp : a.name.localeCompare(b.name);
   });
 }
 
 function renderDeckTable() {
+  const q = deckSearch.toLowerCase();
   let decks = allDecks.filter(d => d.games > 0);
   if (deckFilter !== 'all') decks = decks.filter(d => d.owner === deckFilter);
+  if (q) decks = decks.filter(d => d.name.toLowerCase().includes(q) || d.owner.toLowerCase().includes(q));
   decks = sortDecks(decks);
 
-  document.getElementById('deck-body').innerHTML = decks.map(d => `
-    <tr>
+  document.getElementById('deck-body').innerHTML = decks.length ? decks.map((d, i) => {
+    const wrColor = d.winRate >= 50 ? 'var(--gold)' : d.winRate > 0 ? 'var(--text-dim)' : 'var(--text-faint)';
+    const wrBar   = d.winRate > 0
+      ? `background:linear-gradient(90deg,rgba(201,168,76,0.13) ${d.winRate}%,transparent ${d.winRate}%);`
+      : '';
+    return `
+    <tr style="animation:rowIn 0.2s ease both;animation-delay:${i * 18}ms">
       <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;">${d.owner}</td>
       <td class="deck-name-cell" style="font-weight:600;cursor:pointer;"
           data-card-name="${d.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
@@ -156,16 +193,16 @@ function renderDeckTable() {
         ${d.name} <span style="color:var(--arcane-bright);font-size:0.75rem;">⧉</span>
       </td>
       <td style="text-align:center;">${d.games}</td>
-      <td style="text-align:center;color:var(--gold);font-weight:600;">${d.wins}</td>
+      <td style="text-align:center;color:var(--gold);font-weight:700;">${d.wins}</td>
       <td style="text-align:center;">${d.second}</td>
       <td style="text-align:center;">${d.third}</td>
-      <td style="text-align:center;color:${d.winRate >= 50?'var(--gold)':d.winRate>0?'var(--text-dim)':'var(--text-faint)'};">${d.winRate.toFixed(0)}%</td>
+      <td style="text-align:center;color:${wrColor};${wrBar}">${d.winRate.toFixed(1)}%</td>
       <td style="text-align:center;color:var(--text-dim);">${d.t1SolRing || '—'}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-faint);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.15em;">No decks match your search</td></tr>`;
 
-  // Update header sort indicators
-  document.querySelectorAll('#deck-thead-row th[data-col]').forEach(th => {
+  // Sync sort indicators on headers
+  document.querySelectorAll('#deck-thead-row th').forEach(th => {
     th.classList.remove('sort-active', 'sort-asc', 'sort-desc');
     if (th.dataset.col === deckSort.col) {
       th.classList.add('sort-active', deckSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
@@ -190,21 +227,6 @@ function attachDeckHoverEvents() {
   });
 }
 
-// Column header click → sort
-document.querySelectorAll('#deck-thead-row th[data-col]').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.dataset.col;
-    if (deckSort.col === col) {
-      deckSort.dir = deckSort.dir === 'desc' ? 'asc' : 'desc';
-    } else {
-      deckSort.col = col;
-      // Numeric cols default desc, text cols default asc
-      deckSort.dir = (col === 'name' || col === 'owner') ? 'asc' : 'desc';
-    }
-    renderDeckTable();
-  });
-});
-
 // Player filter buttons
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -213,6 +235,12 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     deckFilter = btn.dataset.filter;
     renderDeckTable();
   });
+});
+
+// Deck name search
+document.getElementById('deck-search').addEventListener('input', e => {
+  deckSearch = e.target.value.trim();
+  renderDeckTable();
 });
 
 // ── CARD VIEWER ──
@@ -451,6 +479,7 @@ function renderPlayerBreakdown() {
 
     const bestLabel = bestDeck ? `${bestDeck.name} ${bestDeck.winRate.toFixed(2)}%` : '—';
     const rateColor = p.winRate === topWinRate ? 'color:var(--gold)' : '';
+    const barPct    = ((p.winRate / topWinRate) * 100).toFixed(1);
 
     return `
       <div class="player-stat-card">
@@ -459,6 +488,7 @@ function renderPlayerBreakdown() {
         <div class="player-stat-line">Record: <strong>${p.wins}W – ${p.games}G</strong></div>
         <div class="player-stat-line">Kills: <strong>${p.kills}</strong> · T1 Sol Ring: <strong>${p.t1SolRing || '—'}</strong></div>
         <div class="player-stat-line">Best: <strong>${bestLabel}</strong></div>
+        <div class="player-wr-bar"><div class="player-wr-fill" style="width:${barPct}%"></div></div>
       </div>`;
   }).join('');
 }
