@@ -131,8 +131,8 @@ function renderDeckTable(filter = 'all') {
   document.getElementById('deck-body').innerHTML = decks.map(d => `
     <tr>
       <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;">${d.owner}</td>
-      <td style="font-weight:600;cursor:pointer;"
-          data-card-name="${d.name.replace(/"/g,'&quot;')}"
+      <td class="deck-name-cell" style="font-weight:600;cursor:pointer;"
+          data-card-name="${d.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
           onclick="quickViewCard('${d.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
         ${d.name} <span style="color:var(--arcane-bright);font-size:0.75rem;">⧉</span>
       </td>
@@ -144,6 +144,22 @@ function renderDeckTable(filter = 'all') {
       <td style="text-align:center;color:var(--text-dim);">${d.t1SolRing || '—'}</td>
     </tr>
   `).join('');
+  attachDeckHoverEvents();
+}
+
+function attachDeckHoverEvents() {
+  document.querySelectorAll('#deck-body .deck-name-cell').forEach(td => {
+    let isHovered = false;
+    td.addEventListener('mouseenter', async () => {
+      isHovered = true;
+      const card = await fetchCard(td.dataset.cardName);
+      if (isHovered && card) showCardPreview(card);
+    });
+    td.addEventListener('mouseleave', () => {
+      isHovered = false;
+      hideCardPreview();
+    });
+  });
 }
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -154,19 +170,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// Deck table hover preview — event delegation so it survives re-renders
-document.getElementById('deck-body').addEventListener('mouseover', async e => {
-  const td = e.target.closest('td[data-card-name]');
-  if (!td) return;
-  const card = await fetchCard(td.dataset.cardName);
-  if (card) showCardPreview(card, td);
-});
-document.getElementById('deck-body').addEventListener('mouseout', e => {
-  const td = e.target.closest('td[data-card-name]');
-  if (!td) return;
-  if (!td.contains(e.relatedTarget)) hideCardPreview();
-});
-
 // ── CARD VIEWER ──
 const cardCache = {};
 
@@ -175,7 +178,11 @@ const cardPreview = document.getElementById('card-preview');
 const cardFace1 = cardPreview.querySelector('.card-face-1');
 const cardFace2 = cardPreview.querySelector('.card-face-2');
 
-function showCardPreview(card, anchorEl) {
+// Track cursor so the popover can appear next to the mouse
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+function showCardPreview(card) {
   const isDual = card.card_faces?.[0]?.image_uris && card.card_faces?.[1]?.image_uris;
 
   if (isDual) {
@@ -192,19 +199,15 @@ function showCardPreview(card, anchorEl) {
     cardPreview.classList.add('single');
   }
 
-  // single card: 260×363, dual: 185+8+185=378×258
+  // single: 260×363  dual: (185×2 + 8gap) × 258
   const previewWidth  = isDual ? 378 : 260;
   const previewHeight = isDual ? 258 : 363;
 
-  const rect = anchorEl.getBoundingClientRect();
-  let left = rect.left + rect.width / 2 - previewWidth / 2;
-  let top  = rect.top - previewHeight - 16;
-
-  // Not enough space above → show below
-  if (top < 8) top = rect.bottom + 12;
-
-  // Clamp horizontally within viewport
-  left = Math.max(8, Math.min(left, window.innerWidth - previewWidth - 8));
+  // Place to the right of cursor; flip left if near right edge
+  let left = mouseX + 20;
+  let top  = mouseY - Math.round(previewHeight / 2);
+  if (left + previewWidth > window.innerWidth - 8) left = mouseX - previewWidth - 20;
+  top = Math.max(8, Math.min(top, window.innerHeight - previewHeight - 8));
 
   cardPreview.style.left = left + 'px';
   cardPreview.style.top  = top  + 'px';
@@ -243,7 +246,7 @@ function createCardEl(card, badge = null) {
     <img src="${img}" alt="${card.name}" loading="lazy">
     <div class="card-label">${card.name}</div>
   `;
-  div.addEventListener('mouseenter', () => showCardPreview(card, div));
+  div.addEventListener('mouseenter', () => showCardPreview(card));
   div.addEventListener('mouseleave', hideCardPreview);
   div.addEventListener('click', () => { hideCardPreview(); openCardModal(card); });
   return div;
