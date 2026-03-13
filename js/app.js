@@ -124,10 +124,29 @@ function renderLeaderboard() {
 }
 
 // ── DECK TABLE ──
-function renderDeckTable(filter = 'all') {
+const deckSort = { col: 'wins', dir: 'desc' };
+let deckFilter = 'all';
+
+function sortDecks(decks) {
+  const { col, dir } = deckSort;
+  return [...decks].sort((a, b) => {
+    let av = a[col], bv = b[col];
+    // String columns sort alphabetically
+    if (typeof av === 'string') {
+      const cmp = av.localeCompare(bv);
+      return dir === 'asc' ? cmp : -cmp;
+    }
+    // Numeric: primary sort on chosen col, secondary alpha by name
+    const cmp = dir === 'asc' ? av - bv : bv - av;
+    return cmp !== 0 ? cmp : a.name.localeCompare(b.name);
+  });
+}
+
+function renderDeckTable() {
   let decks = allDecks.filter(d => d.games > 0);
-  if (filter !== 'all') decks = decks.filter(d => d.owner === filter);
-  decks = [...decks].sort((a,b) => b.winRate - a.winRate || b.wins - a.wins || b.games - a.games);
+  if (deckFilter !== 'all') decks = decks.filter(d => d.owner === deckFilter);
+  decks = sortDecks(decks);
+
   document.getElementById('deck-body').innerHTML = decks.map(d => `
     <tr>
       <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;">${d.owner}</td>
@@ -144,6 +163,15 @@ function renderDeckTable(filter = 'all') {
       <td style="text-align:center;color:var(--text-dim);">${d.t1SolRing || '—'}</td>
     </tr>
   `).join('');
+
+  // Update header sort indicators
+  document.querySelectorAll('#deck-thead-row th[data-col]').forEach(th => {
+    th.classList.remove('sort-active', 'sort-asc', 'sort-desc');
+    if (th.dataset.col === deckSort.col) {
+      th.classList.add('sort-active', deckSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+
   attachDeckHoverEvents();
 }
 
@@ -162,11 +190,28 @@ function attachDeckHoverEvents() {
   });
 }
 
+// Column header click → sort
+document.querySelectorAll('#deck-thead-row th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (deckSort.col === col) {
+      deckSort.dir = deckSort.dir === 'desc' ? 'asc' : 'desc';
+    } else {
+      deckSort.col = col;
+      // Numeric cols default desc, text cols default asc
+      deckSort.dir = (col === 'name' || col === 'owner') ? 'asc' : 'desc';
+    }
+    renderDeckTable();
+  });
+});
+
+// Player filter buttons
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    renderDeckTable(btn.dataset.filter);
+    deckFilter = btn.dataset.filter;
+    renderDeckTable();
   });
 });
 
@@ -421,6 +466,6 @@ function renderPlayerBreakdown() {
 // ── INIT ──
 renderLeaderboard();
 renderPlayerBreakdown();
-renderDeckTable('all');
+renderDeckTable();
 renderCharity();
 loadPodCommanders();
