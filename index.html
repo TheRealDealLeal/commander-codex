@@ -70,6 +70,20 @@
     }
     .deck-table tr:last-child td { border-bottom: none; }
     .deck-table tr:hover td { background: var(--gold-glow); }
+    .deck-table th[data-col] {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .deck-table th[data-col]:hover { color: var(--gold); }
+    .deck-table th[data-col]::after {
+      content: ' ⇅';
+      opacity: 0.3;
+      font-size: 0.7em;
+    }
+    .deck-table th.sort-asc::after  { content: ' ▲'; opacity: 1; color: var(--gold); }
+    .deck-table th.sort-desc::after { content: ' ▼'; opacity: 1; color: var(--gold); }
+    .deck-table th.sort-active { color: var(--gold); }
 
     .modal-deck-stats {
       margin-top: 1.5rem;
@@ -207,15 +221,15 @@
 
     <table class="deck-table">
       <thead>
-        <tr>
-          <th>Owner</th>
-          <th>Commander / Deck</th>
-          <th>Games</th>
-          <th>Wins</th>
-          <th>2nd</th>
-          <th>3rd</th>
-          <th>Win %</th>
-          <th>T1 Sol ⚡</th>
+        <tr id="deck-thead-row">
+          <th data-col="owner">Owner</th>
+          <th data-col="name">Commander / Deck</th>
+          <th data-col="games">Games</th>
+          <th data-col="wins" class="sort-active sort-desc">Wins</th>
+          <th data-col="second">2nd</th>
+          <th data-col="third">3rd</th>
+          <th data-col="winRate">Win %</th>
+          <th data-col="t1SolRing">T1 Sol ⚡</th>
         </tr>
       </thead>
       <tbody id="deck-body"></tbody>
