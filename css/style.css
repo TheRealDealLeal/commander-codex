@@ -8,19 +8,19 @@
   --surface3: #222230;
   --gold: #c9a84c;
   --gold-light: #e8c96d;
-  --gold-dim: #8a6f2e;
+  --gold-dim: #A68535;
   --gold-glow: rgba(201, 168, 76, 0.15);
   --crimson: #8b1a1a;
   --crimson-bright: #c0392b;
   --arcane: #4a2080;
-  --arcane-bright: #7c3dd6;
+  --arcane-bright: #9B6FE8;
   --mist: rgba(201, 168, 76, 0.06);
   --text: #e8e0d0;
   --text-dim: #9a9080;
-  --text-faint: #4a4540;
+  --text-faint: #7A7672;
   --border: rgba(201, 168, 76, 0.2);
   --border-bright: rgba(201, 168, 76, 0.5);
-  --extra-life: #e4002b;
+  --extra-life: #FF1744;
   --extra-life-dark: #8b0019;
 }
 
@@ -83,7 +83,7 @@ nav {
 .nav-logo span {
   color: var(--text-dim);
   font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   display: block;
   letter-spacing: 0.15em;
   font-weight: 400;
@@ -97,7 +97,7 @@ nav {
 
 .nav-links a {
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -169,7 +169,7 @@ nav {
 
 .hero-sub {
   font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -193,7 +193,7 @@ nav {
 
 .section-title {
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--gold-dim);
@@ -239,7 +239,7 @@ nav {
 
 .stat-label {
   font-family: 'Cinzel', serif;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -266,7 +266,7 @@ nav {
 
 .lb-header {
   font-family: 'Cinzel', serif;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -330,7 +330,7 @@ nav {
   display: inline-block;
   padding: 0.2rem 0.75rem;
   font-family: 'Cinzel', serif;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border: 1px solid;
@@ -366,7 +366,7 @@ nav {
 
 .btn {
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.75rem 1.5rem;
@@ -412,7 +412,7 @@ nav {
 
 .card-label {
   font-family: 'Cinzel', serif;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -480,7 +480,7 @@ nav {
 
 .modal-card-type {
   font-family: 'Cinzel', serif;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -536,7 +536,7 @@ nav {
 
 .stream-placeholder-text {
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -650,10 +650,10 @@ nav {
 
 .el-section-title {
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: rgba(228, 0, 43, 0.5);
+  color: var(--extra-life);
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
@@ -737,7 +737,7 @@ nav {
 
 .btn-el {
   font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 1rem 2.5rem;
@@ -759,6 +759,22 @@ nav {
   margin: 2rem 0;
   opacity: 0.5;
   letter-spacing: 0.5em;
+}
+
+/* ── FOCUS INDICATORS ── */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
 }
 
 /* ── SCROLLBAR ── */

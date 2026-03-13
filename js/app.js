@@ -130,7 +130,7 @@ function renderDeckTable(filter = 'all') {
   decks = [...decks].sort((a,b) => b.winRate - a.winRate || b.wins - a.wins || b.games - a.games);
   document.getElementById('deck-body').innerHTML = decks.map(d => `
     <tr>
-      <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;">${d.owner}</td>
+      <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;">${d.owner}</td>
       <td style="font-weight:600;cursor:pointer;" onclick="quickViewCard('${d.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
         ${d.name} <span style="color:var(--arcane-bright);font-size:0.75rem;">⧉</span>
       </td>
@@ -234,10 +234,10 @@ function openCardModal(card) {
   const statsEl = modal.querySelector('.modal-deck-stats');
   if (deckMatches.length > 0) {
     statsEl.innerHTML = `
-      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem;">Pod Record</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem;">Pod Record</div>
       ${deckMatches.map(d => `
         <div style="margin-bottom:${deckMatches.length>1?'1rem':'0'};">
-          ${deckMatches.length>1 ? `<div style="font-family:'Cinzel',serif;font-size:0.65rem;color:var(--text-faint);margin-bottom:0.5rem;letter-spacing:0.1em;">${d.owner.toUpperCase()}</div>` : ''}
+          ${deckMatches.length>1 ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:var(--text-faint);margin-bottom:0.5rem;letter-spacing:0.1em;">${d.owner.toUpperCase()}</div>` : ''}
           <div class="modal-stat-row"><span>Games</span><strong>${d.games}</strong></div>
           <div class="modal-stat-row"><span>Wins</span><strong style="color:var(--gold)">${d.wins}</strong></div>
           <div class="modal-stat-row"><span>2nd / 3rd</span><strong>${d.second} / ${d.third}</strong></div>
