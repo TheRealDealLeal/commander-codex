@@ -131,7 +131,9 @@ function renderDeckTable(filter = 'all') {
   document.getElementById('deck-body').innerHTML = decks.map(d => `
     <tr>
       <td style="color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;">${d.owner}</td>
-      <td style="font-weight:600;cursor:pointer;" onclick="quickViewCard('${d.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <td style="font-weight:600;cursor:pointer;"
+          data-card-name="${d.name.replace(/"/g,'&quot;')}"
+          onclick="quickViewCard('${d.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
         ${d.name} <span style="color:var(--arcane-bright);font-size:0.75rem;">⧉</span>
       </td>
       <td style="text-align:center;">${d.games}</td>
@@ -152,23 +154,51 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
+// Deck table hover preview — event delegation so it survives re-renders
+document.getElementById('deck-body').addEventListener('mouseover', async e => {
+  const td = e.target.closest('td[data-card-name]');
+  if (!td) return;
+  const card = await fetchCard(td.dataset.cardName);
+  if (card) showCardPreview(card, td);
+});
+document.getElementById('deck-body').addEventListener('mouseout', e => {
+  const td = e.target.closest('td[data-card-name]');
+  if (!td) return;
+  if (!td.contains(e.relatedTarget)) hideCardPreview();
+});
+
 // ── CARD VIEWER ──
 const cardCache = {};
 
 // ── CARD HOVER PREVIEW ──
 const cardPreview = document.getElementById('card-preview');
-const cardPreviewImg = cardPreview.querySelector('img');
+const cardFace1 = cardPreview.querySelector('.card-face-1');
+const cardFace2 = cardPreview.querySelector('.card-face-2');
 
-function showCardPreview(imgSrc, name, anchorEl) {
-  cardPreviewImg.src = imgSrc;
-  cardPreviewImg.alt = name;
+function showCardPreview(card, anchorEl) {
+  const isDual = card.card_faces?.[0]?.image_uris && card.card_faces?.[1]?.image_uris;
+
+  if (isDual) {
+    cardFace1.src = card.card_faces[0].image_uris.normal;
+    cardFace1.alt = card.card_faces[0].name;
+    cardFace2.src = card.card_faces[1].image_uris.normal;
+    cardFace2.alt = card.card_faces[1].name;
+    cardPreview.classList.remove('single');
+  } else {
+    const imgSrc = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal;
+    if (!imgSrc) return;
+    cardFace1.src = imgSrc;
+    cardFace1.alt = card.name;
+    cardPreview.classList.add('single');
+  }
+
+  // single card: 260×363, dual: 185+8+185=378×258
+  const previewWidth  = isDual ? 378 : 260;
+  const previewHeight = isDual ? 258 : 363;
 
   const rect = anchorEl.getBoundingClientRect();
-  const previewWidth = 260;
-  const previewHeight = 362; // approx card height at 260px wide
-
   let left = rect.left + rect.width / 2 - previewWidth / 2;
-  let top = rect.top - previewHeight - 16;
+  let top  = rect.top - previewHeight - 16;
 
   // Not enough space above → show below
   if (top < 8) top = rect.bottom + 12;
@@ -213,7 +243,7 @@ function createCardEl(card, badge = null) {
     <img src="${img}" alt="${card.name}" loading="lazy">
     <div class="card-label">${card.name}</div>
   `;
-  div.addEventListener('mouseenter', () => showCardPreview(img, card.name, div));
+  div.addEventListener('mouseenter', () => showCardPreview(card, div));
   div.addEventListener('mouseleave', hideCardPreview);
   div.addEventListener('click', () => { hideCardPreview(); openCardModal(card); });
   return div;
