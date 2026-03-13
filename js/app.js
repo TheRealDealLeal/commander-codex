@@ -392,8 +392,35 @@ function renderCharity() {
   `).join('');
 }
 
+// ── PLAYER BREAKDOWN ──
+function renderPlayerBreakdown() {
+  const topWinRate = Math.max(...players.map(p => p.winRate));
+  const sorted = [...players].sort((a, b) => b.winRate - a.winRate);
+
+  document.getElementById('player-breakdown-grid').innerHTML = sorted.map(p => {
+    const bestDeck = allDecks
+      .filter(d => d.owner === p.name && d.games >= 2)
+      .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)[0]
+      ?? allDecks.filter(d => d.owner === p.name && d.wins > 0)
+                 .sort((a, b) => b.wins - a.wins)[0];
+
+    const bestLabel = bestDeck ? `${bestDeck.name} ${bestDeck.winRate.toFixed(2)}%` : '—';
+    const rateColor = p.winRate === topWinRate ? 'color:var(--gold)' : '';
+
+    return `
+      <div class="player-stat-card">
+        <div class="player-stat-name">${p.name}</div>
+        <div class="player-stat-line">Win Rate: <strong style="${rateColor}">${p.winRate.toFixed(2)}%</strong></div>
+        <div class="player-stat-line">Record: <strong>${p.wins}W – ${p.games}G</strong></div>
+        <div class="player-stat-line">Kills: <strong>${p.kills}</strong> · T1 Sol Ring: <strong>${p.t1SolRing || '—'}</strong></div>
+        <div class="player-stat-line">Best: <strong>${bestLabel}</strong></div>
+      </div>`;
+  }).join('');
+}
+
 // ── INIT ──
 renderLeaderboard();
+renderPlayerBreakdown();
 renderDeckTable('all');
 renderCharity();
 loadPodCommanders();
